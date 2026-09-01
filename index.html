@@ -894,41 +894,31 @@ resource "aws_s3_bucket" "b" {<br>
         }
 
         // --- Quiz Logic ---
-        const questions = [
-            {
-                q: "Which cloud provider explicitly adds 'Sustainability' as the 6th core pillar to its Well-Architected Framework?",
-                options: ["AWS only", "Azure only", "Both AWS and GCP", "GCP only"],
-                answer: 2,
-                explanation: "Both AWS and GCP implement 6 pillars, explicitly including Sustainability alongside Operational Excellence, Security, Reliability, Performance Efficiency, and Cost Optimization."
-            },
-            {
-                q: "What is a primary remediation strategy for 'ClickOps' & Security Breaches?",
-                options: ["Increasing monolith state file size", "Adopting OIDC and Zero-user direct console access", "Opening port 22", "Creating more AWS StackSets"],
-                answer: 1,
-                explanation: "Adopting OpenID Connect (OIDC) for short-lived credentials and enforcing zero-user direct console access prevents manual, unreviewed, and risky changes."
-            },
-            {
-                q: "In the context of Azure Data Engineering, what is Microsoft Fabric?",
-                options: ["A hardware accelerator for MLOps", "A lightweight task automation tool", "A unified, at-scale analytics workload SaaS", "A Terraform wrapper"],
-                answer: 2,
-                explanation: "Microsoft Fabric is Azure's unified platform combining data engineering, data integration, and data science into a single SaaS foundation."
-            },
-            {
-                q: "How does one effectively remediate a Monolith State File in Terraform?",
-                options: ["By running clickops manual fixes", "By using Modular Programming and splitting workspaces", "By utilizing AWS CloudFormation instead", "By disabling drift detection"],
-                answer: 1,
-                explanation: "Splitting network, storage, and compute into independent, chained workspaces using tools like Terragrunt prevents slow executions and blast-radius issues associated with monolith state files."
-            },
-            {
-                q: "Which AWS hardware accelerators are noted for optimizing deep learning performance and lowering cost/environmental impact?",
-                options: ["Vertex & TFX", "Trainium & Inferentia (Inf2)", "Databricks & Fabric", "Spanner Graph"],
-                answer: 1,
-                explanation: "AWS Trainium and Inferentia (Inf2) are custom silicon accelerators designed to optimize MLOps performance on SageMaker while reducing environmental impact by 50% per watt."
-            }
-        ];
-
+        let questions = [];
         let currentQuestionIndex = 0;
         let quizScore = 0;
+
+        async function loadDynamicQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = `
+                <div class="text-center py-10 flex flex-col items-center">
+                    <i class="fa-solid fa-spinner fa-spin text-4xl text-emerald-500 mb-4"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Generating Dynamic Quiz</h3>
+                    <p class="text-sm text-slate-400">The AI Tutor is analyzing the curriculum to generate custom questions...</p>
+                </div>
+            `;
+            try {
+                const res = await fetch('/api/quiz/generate');
+                if (!res.ok) throw new Error('Failed to fetch');
+                questions = await res.json();
+                currentQuestionIndex = 0;
+                quizScore = 0;
+                renderQuiz();
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<div class="text-red-400 text-center py-10">Failed to generate dynamic quiz. Please try again later.</div>';
+            }
+        }
 
         function renderQuiz() {
             const container = document.getElementById('quiz-container');
@@ -1013,10 +1003,15 @@ resource "aws_s3_bucket" "b" {<br>
         }
 
         function resetQuiz() {
-            currentQuestionIndex = 0;
-            quizScore = 0;
-            renderQuiz();
+            loadDynamicQuiz();
         }
+
+        // Add listener for Quiz tab to load on first click
+        document.getElementById('nav-quiz').addEventListener('click', () => {
+            if (questions.length === 0) {
+                loadDynamicQuiz();
+            }
+        });
 
         // eLearning Modal Logic
         let modalData = null;
@@ -1038,7 +1033,7 @@ resource "aws_s3_bucket" "b" {<br>
             // Populate Modal
             document.getElementById('modal-title').textContent = data.title;
             document.getElementById('modal-subtitle').textContent = data.subtitle;
-            document.getElementById('modal-intro').textContent = data.intro;
+            document.getElementById('modal-intro').innerHTML = formatCitation(data.intro);
             document.getElementById('modal-video').src = data.video_url;
 
             // Populate Blogs
@@ -1052,12 +1047,71 @@ resource "aws_s3_bucket" "b" {<br>
 
             // Populate Takeaways
             const takeawaysContainer = document.getElementById('modal-takeaways');
-            takeawaysContainer.innerHTML = data.key_takeaways.map(point => `
-                <li class="flex items-start gap-3">
-                    <i class="fa-solid fa-check text-emerald-400 mt-1 text-sm"></i>
-                    <span class="text-[11px] text-slate-300 leading-relaxed">${point}</span>
-                </li>
-            `).join('');
+            if(data.key_takeaways) {
+                takeawaysContainer.innerHTML = data.key_takeaways.map(point => `
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-emerald-400 mt-1 text-sm"></i>
+                        <span class="text-[11px] text-slate-300 leading-relaxed">${formatCitation(point)}</span>
+                    </li>
+                `).join('');
+            } else {
+                takeawaysContainer.innerHTML = '';
+            }
+
+            // Populate Deep Dive Syllabus dynamically
+            const syllabusContainer = document.getElementById('modal-syllabus-content');
+            syllabusContainer.innerHTML = '';
+            const knownKeys = ['title', 'subtitle', 'intro', 'video_url', 'blogs', 'key_takeaways'];
+            
+            for (const key in data) {
+                if (!knownKeys.includes(key) && typeof data[key] === 'object') {
+                    let html = `<div class="bg-slate-950 border border-slate-800 p-6 rounded-xl">
+                        <h3 class="text-emerald-400 font-bold uppercase tracking-widest text-xs mb-4 border-b border-slate-800 pb-2">${key.replace(/_/g, ' ')}</h3>
+                        <div class="space-y-4">`;
+                    
+                    if (Array.isArray(data[key])) {
+                        data[key].forEach(item => {
+                            html += `<p class="text-sm text-slate-300 flex gap-3"><i class="fa-solid fa-arrow-right text-slate-600 mt-1"></i> <span>${formatCitation(item)}</span></p>`;
+                        });
+                    } else {
+                        for (const subKey in data[key]) {
+                            const subVal = data[key][subKey];
+                            if (typeof subVal === 'string') {
+                                html += `<div class="mb-3"><span class="font-bold text-white">${subKey.replace(/_/g, ' ')}:</span> <span class="text-sm text-slate-300">${formatCitation(subVal)}</span></div>`;
+                            } else if (typeof subVal === 'object') {
+                                html += `<div class="mb-3 bg-slate-900/50 p-4 rounded-lg"><span class="font-bold text-white block mb-2">${subKey.replace(/_/g, ' ')}</span>`;
+                                if (subVal.definition || subVal.description) {
+                                    html += `<p class="text-sm text-slate-300 mb-2 italic">${formatCitation(subVal.definition || subVal.description)}</p>`;
+                                }
+                                const practices = subVal.key_practices || subVal.practices || subVal.common_smells || [];
+                                if(practices.length > 0) {
+                                    html += `<ul class="space-y-2 mt-2">`;
+                                    practices.forEach(p => {
+                                        html += `<li class="text-xs text-slate-400 flex gap-2"><i class="fa-solid fa-circle text-[6px] mt-1.5 text-sky-500"></i> <span>${formatCitation(p)}</span></li>`;
+                                    });
+                                    html += `</ul>`;
+                                }
+                                html += `</div>`;
+                            }
+                        }
+                    }
+                    html += `</div></div>`;
+                    syllabusContainer.innerHTML += html;
+                }
+            }
+
+            // Setup AI Tutor button
+            const askAiBtn = document.getElementById('btn-ask-ai');
+            askAiBtn.onclick = () => {
+                closeModal();
+                switchTab('aitutor');
+                const input = document.getElementById('chat-input');
+                input.value = `I'd like to learn more about the concept of ${data.title}. Could you break it down for me?`;
+                input.focus();
+            };
+
+            // Reset modal tabs to Overview
+            switchModalTab('overview');
 
             // Show Modal
             const modal = document.getElementById('elearning-modal');
@@ -1068,6 +1122,30 @@ resource "aws_s3_bucket" "b" {<br>
             modal.classList.remove('opacity-0');
             modalContent.classList.remove('scale-95');
             modalContent.classList.add('scale-100');
+        }
+
+        function switchModalTab(tabId) {
+            const btnOverview = document.getElementById('mtab-overview');
+            const btnSyllabus = document.getElementById('mtab-syllabus');
+            const contentOverview = document.getElementById('mcontent-overview');
+            const contentSyllabus = document.getElementById('mcontent-syllabus');
+
+            if (tabId === 'overview') {
+                btnOverview.className = "px-6 py-4 text-sm font-bold border-b-2 border-emerald-500 text-emerald-400";
+                btnSyllabus.className = "px-6 py-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-300";
+                contentOverview.classList.remove('hidden');
+                contentSyllabus.classList.add('hidden');
+            } else {
+                btnSyllabus.className = "px-6 py-4 text-sm font-bold border-b-2 border-emerald-500 text-emerald-400";
+                btnOverview.className = "px-6 py-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-300";
+                contentSyllabus.classList.remove('hidden');
+                contentOverview.classList.add('hidden');
+            }
+        }
+
+        function formatCitation(text) {
+            if(!text) return "";
+            return text.replace(/\[([\d,\s]+)\]/g, '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mx-1 align-middle leading-none">[$1]</span>');
         }
 
         function closeModal() {
@@ -1096,43 +1174,66 @@ resource "aws_s3_bucket" "b" {<br>
             <!-- Hero Section -->
             <div class="bg-slate-950 p-8 border-b border-slate-800 relative overflow-hidden">
                 <div class="absolute inset-0 bg-emerald-500/5"></div>
+                <div class="relative z-10 flex justify-between items-start">
+                    <div>
+                        <h2 id="modal-title" class="text-3xl font-bold text-white mb-2"></h2>
+                        <p id="modal-subtitle" class="text-emerald-400 font-medium mb-4"></p>
+                    </div>
+                    <button id="btn-ask-ai" class="bg-emerald-500/20 text-emerald-400 border border-emerald-500 hover:bg-emerald-500 hover:text-slate-950 px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-robot"></i> Ask AI Tutor
+                    </button>
+                </div>
                 <div class="relative z-10">
-                    <h2 id="modal-title" class="text-3xl font-bold text-white mb-2"></h2>
-                    <p id="modal-subtitle" class="text-emerald-400 font-medium mb-4"></p>
                     <p id="modal-intro" class="text-sm text-slate-300 leading-relaxed max-w-3xl"></p>
                 </div>
             </div>
 
-            <div class="p-8">
-                <!-- Video Section -->
-                <div class="mb-8">
-                    <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <i class="fa-brands fa-youtube text-red-500 text-lg"></i> Video Tutorial
-                    </h3>
-                    <div class="aspect-video bg-slate-950 rounded-xl overflow-hidden border border-slate-800">
-                        <iframe id="modal-video" class="w-full h-full" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                    </div>
-                </div>
+            <!-- Modal Tabs -->
+            <div class="flex border-b border-slate-800 bg-slate-900/50 px-8">
+                <button onclick="switchModalTab('overview')" id="mtab-overview" class="px-6 py-4 text-sm font-bold border-b-2 border-emerald-500 text-emerald-400">Overview & Media</button>
+                <button onclick="switchModalTab('syllabus')" id="mtab-syllabus" class="px-6 py-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-300">Deep Dive Syllabus</button>
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Blogs Section -->
-                    <div>
+            <div class="p-8 min-h-[400px]">
+                <!-- Tab: Overview -->
+                <div id="mcontent-overview">
+                    <!-- Video Section -->
+                    <div class="mb-8">
                         <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-book-open text-sky-400 text-lg"></i> Recommended Blogs
+                            <i class="fa-brands fa-youtube text-red-500 text-lg"></i> Video Tutorial
                         </h3>
-                        <div id="modal-blogs" class="space-y-4">
-                            <!-- Populated by JS -->
+                        <div class="aspect-video bg-slate-950 rounded-xl overflow-hidden border border-slate-800">
+                            <iframe id="modal-video" class="w-full h-full" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                         </div>
                     </div>
 
-                    <!-- Key Takeaways Section -->
-                    <div>
-                        <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-lightbulb text-yellow-400 text-lg"></i> Key Takeaways
-                        </h3>
-                        <ul id="modal-takeaways" class="space-y-3">
-                            <!-- Populated by JS -->
-                        </ul>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Blogs Section -->
+                        <div>
+                            <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-book-open text-sky-400 text-lg"></i> Recommended Blogs
+                            </h3>
+                            <div id="modal-blogs" class="space-y-4">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Key Takeaways Section -->
+                        <div>
+                            <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-lightbulb text-yellow-400 text-lg"></i> Key Takeaways
+                            </h3>
+                            <ul id="modal-takeaways" class="space-y-3">
+                                <!-- Populated by JS -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Syllabus -->
+                <div id="mcontent-syllabus" class="hidden">
+                    <div id="modal-syllabus-content" class="space-y-6">
+                        <!-- Dynamically populated from JSON -->
                     </div>
                 </div>
             </div>

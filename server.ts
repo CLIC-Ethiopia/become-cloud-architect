@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import fs from "fs/promises";
 
 // Initialize Gemini Client
@@ -24,19 +24,20 @@ app.post("/api/chat", async (req, res) => {
     try {
         const { message, history } = req.body;
         
+        let dataContent = "";
+        try {
+            dataContent = await fs.readFile(path.join(process.cwd(), 'public', 'data.json'), 'utf8');
+        } catch (e) {
+            console.error("Could not read data.json for AI Tutor context.");
+        }
+
         const chat = ai.chats.create({
             model: "gemini-3.7-flash",
             config: {
-                systemInstruction: "You are a helpful, encouraging, and knowledgeable AI Tutor. You explain concepts clearly, provide examples, and ask guiding questions to help students learn.",
+                systemInstruction: `You are a helpful, encouraging, and knowledgeable AI Tutor. You explain concepts clearly, provide examples, and ask guiding questions to help students learn. Use the following curriculum data as your primary source of truth:\n\n${dataContent}`,
             },
+            history: history && Array.isArray(history) ? history : undefined
         });
-
-        // Initialize chat history if provided
-        if (history && Array.isArray(history)) {
-            for (const turn of history) {
-                await chat.sendMessage({ message: turn.parts[0].text }); // Simple simulation of history, though ideally we'd pass history to chat initialization
-            }
-        }
 
         const streamResponse = await chat.sendMessageStream({ message });
         
@@ -53,6 +54,45 @@ app.post("/api/chat", async (req, res) => {
         res.end();
     } catch (error: any) {
         console.error("Chat error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 1.5 Dynamic Quiz Generation Endpoint
+app.get("/api/quiz/generate", async (req, res) => {
+    try {
+        let dataContent = "";
+        try {
+            dataContent = await fs.readFile(path.join(process.cwd(), 'public', 'data.json'), 'utf8');
+        } catch (e) {
+            console.error("Could not read data.json for Quiz generation.");
+        }
+
+        const response = await ai.models.generateContent({
+            model: "gemini-3.7-flash",
+            contents: "Generate 5 challenging multiple-choice questions based on this curriculum. Curriculum: " + dataContent,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            q: { type: Type.STRING, description: "The question" },
+                            options: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Array of exactly 4 strings" },
+                            answer: { type: Type.INTEGER, description: "Integer 0-3 representing the correct option index" },
+                            explanation: { type: Type.STRING, description: "String explaining why" }
+                        },
+                        required: ["q", "options", "answer", "explanation"]
+                    }
+                }
+            }
+        });
+        
+        const text = response.text || "[]";
+        res.json(JSON.parse(text));
+    } catch (error: any) {
+        console.error("Quiz generation error:", error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -96,7 +136,9 @@ app.get("/api/research/status/:id", async (req, res) => {
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const safeName = queryName.replace(/[^a-z0-9]/gi, '_').substring(0, 30);
             const filename = `${safeName}_${timestamp}.md`;
-            const filepath = path.join(process.cwd(), 'public', 'research', filename);
+            const researchDir = path.join(process.cwd(), 'public', 'research');
+            await fs.mkdir(researchDir, { recursive: true });
+            const filepath = path.join(researchDir, filename);
             
             await fs.writeFile(filepath, fullReport, 'utf8');
             
@@ -116,6 +158,7 @@ app.get("/api/research/status/:id", async (req, res) => {
 app.get("/api/research/files", async (req, res) => {
     try {
         const researchDir = path.join(process.cwd(), 'public', 'research');
+        await fs.mkdir(researchDir, { recursive: true });
         const files = await fs.readdir(researchDir);
         const mdFiles = files.filter(f => f.endsWith('.md'));
         res.json({ files: mdFiles });

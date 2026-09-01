@@ -1,27 +1,12 @@
-{
+const fs = require('fs');
+
+const existingData = JSON.parse(fs.readFileSync('public/data.json', 'utf8'));
+
+const newData = {
   "aws-wa": {
     "title": "AWS Well-Architected Framework",
     "subtitle": "Build secure, high-performing, resilient, and efficient infrastructure.",
     "intro": "The AWS Well-Architected Framework provides a consistent approach to evaluate architectures and implement designs that scale over time. It is structured around six core pillars: Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, and Sustainability [192, 209]. This framework serves as a guide for cloud architects to treat non-adhered best practices as technical debt and business risks to be continuously monitored and improved [209].",
-    "video_url": "https://www.youtube.com/embed/5T7Y0n_LdUM",
-    "blogs": [
-      {
-        "title": "AWS Architecture Blog",
-        "url": "https://aws.amazon.com/blogs/architecture/",
-        "snippet": "Official blog from AWS consistently publishing articles on well-architected patterns, cost optimization strategies, and new framework lenses."
-      },
-      {
-        "title": "Mastering AWS Well-Architected",
-        "url": "#",
-        "snippet": "A comprehensive guide walking through the six pillars, sharing best practices and personal insights for designing applications with confidence."
-      }
-    ],
-    "key_takeaways": [
-      "Operational Excellence: Automate changes and anticipate failure.",
-      "Security: Apply security at all layers and protect data in transit/at rest.",
-      "Reliability: Scale horizontally and manage change in automation.",
-      "Cost Optimization: Adopt a consumption model and measure overall efficiency."
-    ],
     "pillars": {
       "Operational Excellence": {
         "definition": "The ability to support development and run workloads effectively, gain insight into their operations, and to continuously improve supporting processes and procedures to deliver business value [242].",
@@ -100,25 +85,6 @@
     "title": "Azure Well-Architected Framework",
     "subtitle": "Improve the quality of a workload with guiding tenets and architectural decision points.",
     "intro": "The Azure Well-Architected Framework consists of quality-driven tenets, architectural decision points, and review tools intended to help solution architects build a technical foundation for their workloads on Azure [4]. It focuses on building reliable, secure, and performant workloads that maximize the value of investment over time [4].",
-    "video_url": "https://www.youtube.com/embed/XqCqU_eTqSg",
-    "blogs": [
-      {
-        "title": "Microsoft Learn: Azure Architecture Center",
-        "url": "https://learn.microsoft.com/en-us/azure/architecture/",
-        "snippet": "The definitive source offering comprehensive guidance, recommended practices, risk considerations, and tradeoffs for each Azure pillar."
-      },
-      {
-        "title": "Azure Well-Architected Framework in Practice",
-        "url": "#",
-        "snippet": "Practical observations and insights into applying the framework throughout the lifecycle of workloads, including how to use Azure Advisor."
-      }
-    ],
-    "key_takeaways": [
-      "Reliability: Ensure your application can meet commitments to customers.",
-      "Security: Protect against threats and govern access tightly (Zero Trust).",
-      "Cost Optimization: Maximize the value of cloud spend.",
-      "Operational Excellence: Keep systems running in production reliably."
-    ],
     "pillars": {
       "Reliability": {
         "description": "Ensures that the workload meets the uptime and recovery targets (RTO/RPO) by building redundancy and resiliency at scale [6].",
@@ -171,25 +137,6 @@
     "title": "Google Cloud Architecture Framework",
     "subtitle": "Design for change. Simplify with managed services.",
     "intro": "The Google Cloud Architecture Framework provides validated recommendations and design principles for building secure, efficient, resilient, high-performing, cost-effective, and sustainable workloads on GCP [29]. It is curated to reflect expanding cloud capabilities, industry best practices, and community knowledge [29].",
-    "video_url": "https://www.youtube.com/embed/PjE5FfQdYAI",
-    "blogs": [
-      {
-        "title": "Google Cloud Blog: Architecture Framework",
-        "url": "https://cloud.google.com/blog/",
-        "snippet": "Deep dives into system design, operational efficiency, and security best practices tailored for Google Cloud Platform services."
-      },
-      {
-        "title": "Building Scalable Architectures on GCP",
-        "url": "#",
-        "snippet": "Explore how to use BeyondCorp for defense in depth and Spanner for global, horizontally scalable relational databases."
-      }
-    ],
-    "key_takeaways": [
-      "System Design: Decouple architecture and use stateless designs.",
-      "Operational Excellence: Automate deployments with Cloud Build.",
-      "Security & Compliance: Implement BeyondCorp (Zero Trust) principles.",
-      "Reliability: Design for multi-region active-active topologies."
-    ],
     "core_principles": {
       "Design for change": "Architect systems that can easily evolve. Avoid rigid integrations and plan for continuous updates [28].",
       "Document your architecture": "Establish a common language, standards, and records of design choices to enable cross-functional team collaboration [28, 33].",
@@ -215,25 +162,6 @@
     "title": "Data Engineering on Cloud",
     "subtitle": "Building robust, high-throughput, at-scale analytics pipelines.",
     "intro": "Modern cloud data engineering focuses on designing pipelines that separate compute and storage, utilize unified batch/streaming engines, and enable self-service analytics [198, 200]. It encompasses building decentralized topologies to prevent data silos [198, 199].",
-    "video_url": "https://www.youtube.com/embed/4HqB2Z23l7A",
-    "blogs": [
-      {
-        "title": "Serverless Reference Architectures for Data Pipelines",
-        "url": "#",
-        "snippet": "Learn how to transform batch pipelines into streaming systems using Cloud Dataflow, Dataproc, and BigQuery."
-      },
-      {
-        "title": "Data Mesh Topologies in Practice",
-        "url": "#",
-        "snippet": "An exploration of decentralized data management utilizing Dataplex and automated data lakehouses for cross-cloud analytics."
-      }
-    ],
-    "key_takeaways": [
-      "Ingestion: Use robust streaming (Pub/Sub, Event Hubs, Kinesis).",
-      "Storage: Separate compute and storage using Delta Lake / Iceberg formats.",
-      "Processing: Leverage Apache Beam for unified batch and streaming.",
-      "Governance: Implement Dataplex or AWS Lake Formation for centralized policy."
-    ],
     "core_concepts": {
       "Data Mesh on Google Cloud": "A decentralized architecture pattern that organizes data ownership by business domains. Core functions include designing self-service data platforms, building validated data products, and establishing centralized data discovery and consumption [23, 25, 198].",
       "Microsoft Fabric Analytical Workloads": "A unified SaaS solution that enables end-to-end at-scale data analytics, lakehouse configurations, and business intelligence on Azure [7].",
@@ -254,19 +182,6 @@
     "title": "Cloud Data Science",
     "subtitle": "High-performance collaborative workspaces and automated pipelines.",
     "intro": "Cloud platforms offer infinite elasticity to scale data science compute beyond single-machine memory constraints [200, 201]. They enable collaborative workspaces where experiments, models, and features are fully managed and tracked [201].",
-    "video_url": "https://www.youtube.com/embed/L_4RryT7o_Y",
-    "blogs": [
-      {
-        "title": "Automating Complex Data Science Pipelines",
-        "url": "#",
-        "snippet": "Using Agentic AI and orchestration platforms to automate data cleaning, feature engineering, and model evaluation."
-      }
-    ],
-    "key_takeaways": [
-      "Scalability: Move beyond single-machine memory constraints with Spark.",
-      "Collaboration: Use managed notebooks for shared environments.",
-      "Experimentation: Track ML experiments, parameters, and metrics easily."
-    ],
     "core_components": {
       "Collaborative Workspaces": "Leveraging platforms like Azure Databricks, Vertex AI, and SageMaker Studio to share managed notebooks, coordinate clusters, and automate environments [3, 200, 201].",
       "Distributed Compute": "Utilizing managed Spark or Ray clusters to process petabyte-scale feature engineering, model training, and data preparation [200, 201].",
@@ -281,24 +196,6 @@
     "title": "Machine Learning Operations (MLOps)",
     "subtitle": "Continuous delivery, automation, and custom silicon optimization.",
     "intro": "MLOps brings software engineering and DevOps principles to machine learning workloads. It focuses on automating model training, evaluation, validation, deployment, and performance monitoring under structured CI/CD pipelines [25, 202].",
-    "video_url": "https://www.youtube.com/embed/H5M0Ua5G8lM",
-    "blogs": [
-      {
-        "title": "TFX & Vertex AI Pipelines",
-        "url": "#",
-        "snippet": "Building continuous delivery pipelines using TensorFlow Extended and Vertex Pipelines for automated model retraining."
-      },
-      {
-        "title": "Optimizing Deep Learning with Custom Silicon",
-        "url": "#",
-        "snippet": "How to leverage AWS Trainium and Inferentia to lower environmental impact and cost by 50% per watt."
-      }
-    ],
-    "key_takeaways": [
-      "Automation: Trigger retraining pipelines automatically on data drift.",
-      "Versioning: Version data, code, and models simultaneously.",
-      "Monitoring: Track model prediction distributions in production."
-    ],
     "mlops_pipeline_stages": {
       "Continuous Integration (CI)": "Automating template verification, parameter validation, and unit tests of training code upon code commit [25, 202].",
       "Continuous Delivery (CD)": "Continuous deployment pipelines delivering models, metadata, and APIs across staging and production tiers [25, 202]. Works with frameworks like TensorFlow Extended (TFX), Vertex Pipelines (Agent Platform), and Cloud Build [25, 202].",
@@ -317,24 +214,6 @@
     "title": "Generative AI & LLMs",
     "subtitle": "Enterprise RAG architectures, secure orchestrations, and Responsible AI.",
     "intro": "Deploying Generative AI and Large Language Models (LLMs) in enterprise environments requires a deep focus on scalability, security, lifecycle management, and Responsible AI [5]. It demands strict federated access, secure pipelines, and grounding designs [203, 204].",
-    "video_url": "https://www.youtube.com/embed/d3WbZ5Z1JOs",
-    "blogs": [
-      {
-        "title": "RAG Architectures on Google Cloud",
-        "url": "#",
-        "snippet": "Implementing highly accurate semantic search using Vertex AI embeddings, AlloyDB pgvector, and LangChain."
-      },
-      {
-        "title": "Securing Enterprise LLMs on AWS",
-        "url": "#",
-        "snippet": "Multi-tenant applications using Amazon Bedrock and IAM Identity Center for secured federated access."
-      }
-    ],
-    "key_takeaways": [
-      "RAG: Ground generative models in enterprise truth via vector search.",
-      "Security: Do not train models on sensitive PII without strict anonymization.",
-      "Agentic Workflows: Give LLMs tools to perform actions and query APIs."
-    ],
     "reference_architectures": {
       "Retrieval-Augmented Generation (RAG)": "Grounding generative models in enterprise truths to prevent hallucinations. RAG architectures securely integrate LLMs with private databases, converting documents into vector embeddings [24, 203].",
       "GCP pgvector Implementation": "RAG infrastructure leveraging Vertex AI embeddings, AlloyDB pgvector, and LangChain for highly accurate semantic search [24, 204].",
@@ -350,19 +229,6 @@
     "title": "Native IaC Frameworks",
     "subtitle": "Provider-specific declarative infrastructure automation.",
     "intro": "Native Infrastructure as Code frameworks are built and deeply maintained by the cloud providers. They offer zero-day support for new cloud resources, deep platform integrations, and simplified state management without external dependencies [83, 205].",
-    "video_url": "https://www.youtube.com/embed/K8qYQZ5y9aM",
-    "blogs": [
-      {
-        "title": "Scaling with AWS CloudFormation StackSets",
-        "url": "#",
-        "snippet": "Deploying infrastructure across multiple AWS accounts and regions from a centralized administrator account."
-      }
-    ],
-    "key_takeaways": [
-      "Deep Integration: Day-zero support for new provider features.",
-      "State Management: Managed transparently by the cloud provider.",
-      "Lock-in: Configurations are not portable across different clouds."
-    ],
     "frameworks": {
       "AWS CloudFormation": {
         "description": "Declarative templates written in YAML or JSON that define the desired state of AWS infrastructure [81, 302].",
@@ -392,19 +258,6 @@
     "title": "Agnostic IaC Platforms",
     "subtitle": "Multi-cloud resource provisioning, State tracking, and GitOps workflows.",
     "intro": "Cloud-agnostic IaC platforms abstract provider-specific details behind consistent interfaces, allowing organizations to manage heterogeneous, multi-cloud environments (AWS, Azure, GCP, SaaS) from a single codebase [45, 83, 114].",
-    "video_url": "https://www.youtube.com/embed/l5k1aiIGfSc",
-    "blogs": [
-      {
-        "title": "Terraform Modules & Best Practices",
-        "url": "#",
-        "snippet": "Building reusable, scalable IaC. Learn to break down massive monoliths into logical, independent modules."
-      }
-    ],
-    "key_takeaways": [
-      "Multi-Cloud: Unified syntax (like HCL) across AWS, Azure, GCP, and Kubernetes.",
-      "State Tracking: Requires configuring secure remote state backends.",
-      "Ecosystem: Massive community registry for pre-built modules."
-    ],
     "core_platforms": {
       "Terraform": {
         "description": "A declarative IaC framework utilizing HashiCorp Configuration Language (HCL) and provider-based architectures [173, 206].",
@@ -428,24 +281,6 @@
     "title": "IaC Critical Pitfalls & Remediation",
     "subtitle": "Overcoming ClickOps, Infrastructure Drift, Monolith States, and Security Smells.",
     "intro": "Improper management of Infrastructure as Code introduces code debt and major security vulnerabilities. Mature cloud environments demand proactive remediation strategies and automated pipelines [8, 207].",
-    "video_url": "https://www.youtube.com/embed/L1W0B5Z8Cbc",
-    "blogs": [
-      {
-        "title": "13 Biggest Terraform Challenges & Pitfalls",
-        "url": "#",
-        "snippet": "A deep dive into avoiding excessively large Terraform states, hardcoding credentials, and ignoring lifecycle configuration drift."
-      },
-      {
-        "title": "Infrastructure as Code Anti-Patterns",
-        "url": "#",
-        "snippet": "Why you should never skip 'terraform plan' and how to set up automated drift detection in CI/CD."
-      }
-    ],
-    "key_takeaways": [
-      "Drift: Always enforce changes through code. Restrict direct console access.",
-      "Security: Use OIDC or Vault; never hardcode secrets in repository files.",
-      "Architecture: Split state files by environment and logical domain to limit blast radius."
-    ],
     "critical_pitfalls": {
       "ClickOps & Manual Interventions": {
         "description": "Bypassing IaC pipelines to make direct modifications via cloud web consoles or CLIs [12, 299]. Accounts for nearly 90% of infrastructure divergence cases [12].",
@@ -477,4 +312,24 @@
       }
     }
   }
+};
+
+function isObject(item) {
+  return (item && typeof item === 'object' && !Array.isArray(item));
 }
+
+function mergeDeep(target, source) {
+  for (const key in source) {
+    if (isObject(source[key])) {
+      if (!target[key]) Object.assign(target, { [key]: {} });
+      mergeDeep(target[key], source[key]);
+    } else {
+      Object.assign(target, { [key]: source[key] });
+    }
+  }
+  return target;
+}
+
+const mergedData = mergeDeep(existingData, newData);
+fs.writeFileSync('public/data.json', JSON.stringify(mergedData, null, 2));
+console.log('Data merged successfully.');
