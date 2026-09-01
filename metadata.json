@@ -1,0 +1,6 @@
+{
+  "name": "Cloud Architect Academy",
+  "description": "Interactive learning platform for Cloud Architecture, IaC, and Well-Architected Workloads.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
