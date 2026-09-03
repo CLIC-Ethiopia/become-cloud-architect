@@ -32,7 +32,7 @@ app.post("/api/chat", async (req, res) => {
         }
 
         const chat = ai.chats.create({
-            model: "gemini-3.7-flash",
+            model: "gemini-2.5-flash",
             config: {
                 systemInstruction: `You are a helpful, encouraging, and knowledgeable AI Tutor. You explain concepts clearly, provide examples, and ask guiding questions to help students learn. Use the following curriculum data as your primary source of truth:\n\n${dataContent}`,
             },
@@ -60,6 +60,7 @@ app.post("/api/chat", async (req, res) => {
 
 // 1.5 Dynamic Quiz Generation Endpoint
 app.get("/api/quiz/generate", async (req, res) => {
+    const category = req.query.category as string || 'All';
     try {
         let dataContent = "";
         try {
@@ -68,9 +69,11 @@ app.get("/api/quiz/generate", async (req, res) => {
             console.error("Could not read data.json for Quiz generation.");
         }
 
+        const prompt = `Generate 5 challenging multiple-choice questions based on this curriculum. ${category !== 'All' ? `Focus specifically on the topic of ${category}.` : ''} Curriculum: ${dataContent}`;
+
         const response = await ai.models.generateContent({
-            model: "gemini-3.7-flash",
-            contents: "Generate 5 challenging multiple-choice questions based on this curriculum. Curriculum: " + dataContent,
+            model: "gemini-2.5-flash",
+            contents: prompt,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
